@@ -10,60 +10,77 @@ import java.util.List;
 
 @Repository
 public interface CustomerGraphRepository extends Neo4jRepository<CustomerNode, Long> {
+    // Crear cliente
+    @Query("CREATE (c:Customer {id: $id, firstName: $firstName, lastName: $lastName}) RETURN c")
+    CustomerNode createCustomerNode(Long id, String firstName, String lastName);
 
-    //CRUD
-
-    @Query("CREATE (c:Client {username: $username, email: $email, password: $password, firstName: $firstName, lastName: $lastName}) RETURN c")
-    CustomerNode createClient(String username, String email, String password, String firstName, String lastName);
-
-    @Query("MATCH (c:Client {username: $username}) " +
-            "SET c.email = $email, c.firstName = $firstName, c.lastName = $lastName " +
+    // Actualizar cliente
+    @Query("MATCH (c:Customer {id: $id}) " +
+            "SET c.firstName = $firstName, c.lastName = $lastName " +
             "RETURN c")
-    CustomerNode updateClient(String username, String email, String firstName, String lastName);
+    CustomerNode updateCustomerNode(Long id, String firstName, String lastName);
 
+    // Método para eliminar un nodo de cliente por ID
+    void deleteCustomerNode(Long id, String firstName, String lastName);
 
+    // Encontrar todos los clientes
+    @Query("MATCH (c:Customer) RETURN c")
+    List<CustomerNode> findAllCustomerNodes();
 
+    // Encontrar cliente por ID
+    @Query("MATCH (c:Customer {id: $id}) RETURN c")
+    CustomerNode findCustomerNodeById(Long id);
 
-    @Query("MATCH (c:Client) RETURN c")
-    List<CustomerNode> findAllClients();
-
-    @Query("MATCH (c:Client {username: $username}) RETURN c")
-    CustomerNode findClientByUsername(String username);
-
-    @Query("MATCH (c:Client) WHERE c.email = $email RETURN c")
-    CustomerNode findByEmail(String email);
-
-    @Query("MATCH (c:Client {username: $username}) " +
+    // Productos recientemente vistos por cliente
+    @Query("MATCH (c:Customer {id: $id}) " +
             "MATCH (c)-[:VIO]->(p:Product) " +
             "RETURN collect(p) AS recentlyViewedProducts")
-    List<ProductNode> findRecentlyViewedProducts(String username);
+    List<ProductNode> findRecentlyViewedProductsByCustomerNode(Long id);
 
-    @Query("MATCH (c:Client {username: $username}) " +
-            "RETURN c.purchases AS purchases")
-    List<ProductNode> findPurchasesByClient(String username);
+    // Agregar producto a los recientemente vistos
+    @Query("MATCH (p:Product {id: $productId}), (c:Customer {id: $customerId}) " +
+            "MERGE (c)-[r:VIO]->(p)")
+    void addProductToRecentlyViewed(Long customerId, Long productId);
 
+    // Recomendaciones por categoría (género)
+    @Query("MATCH (c:Customer {id: $customerId}) " +
+            "MATCH (c)-[:VIO]->(p:Product) " +
+            "WITH DISTINCT p.category AS category " +
+            "MATCH (other:Product) " +
+            "WHERE other.category = category AND NOT (c)-[:VIO]->(other) " +
+            "RETURN DISTINCT other")
+    List<ProductNode> recommendProductsByCategory(Long customerId);
 
-    @Query("MATCH (u:User {username: $username}) " +
-            "MATCH (u)-[:VIO]->(p:Product) " +
-            "RETURN collect(p) AS recentlyViewedProducts")
-    List<ProductNode> findRecentlyViewedProductsByUserInGraph(String username);
+    // Recomendaciones por década de lanzamiento
+    @Query("MATCH (c:Customer {id: $customerId}) " +
+            "MATCH (c)-[:VIO]->(p:Product) " +
+            "WITH DISTINCT p.year AS year " +
+            "MATCH (other:Product) " +
+            "WHERE other.year / 10 = year / 10 AND NOT (c)-[:VIO]->(other) " +
+            "RETURN DISTINCT other")
+    List<ProductNode> recommendProductsByDecade(Long customerId);
 
-    @Query("MATCH (p:Product {code: $code}) " +
-            "MATCH (c:Client {username: $username}) " +
-            "MERGE (c)-[s:VIO]->(p)")
-    void addProductToRecentlyViewedInGraph(String username, String code);
+    // Recomendaciones por director
+    @Query("MATCH (c:Customer {id: $customerId}) " +
+            "MATCH (c)-[:VIO]->(p:Product) " +
+            "WITH DISTINCT p.director AS director " +
+            "MATCH (other:Product) " +
+            "WHERE other.director = director AND NOT (c)-[:VIO]->(other) " +
+            "RETURN DISTINCT other")
+    List<ProductNode> recommendProductsByDirector(Long customerId);
 
+    // Agregar producto a favoritos
+    @Query("MATCH (c:Customer {id: $customerId}), (p:Product {id: $productId}) " +
+            "CREATE (c)-[:FAVORITO]->(p)")
+    void addProductToFavorites(Long customerId, Long productId);
 
-    //Productos Favoritos del Cliente
-    @Query("MATCH (c:Client {username: $username}), (p:Product {code: $productId}) CREATE (c)-[:FAVORITE]->(p)")
-    void addProductToFavoritesInGraph(String username, String productId);
-
-    @Query("MATCH (c:Client {username: $username}) " +
-            "MATCH (c)-[:FAVORITE]->(p:Product) " +
+    // Encontrar productos favoritos
+    @Query("MATCH (c:Customer {id: $customerId}) " +
+            "MATCH (c)-[:FAVORITO]->(p:Product) " +
             "RETURN collect(p) AS favoriteProducts")
-    List<ProductNode> findFavoriteProductsByClientInGraph(String username);
+    List<ProductNode> findFavoriteProducts(Long customerId);
 
-    @Query("MATCH (c:Client {username: $username})-[r:FAVORITE]->(p:Product {code: $productId}) DELETE r")
-    void deleteFavoriteProduct(String username, String productId);
-
+    // Eliminar producto de favoritos
+    @Query("MATCH (c:Customer {id: $customerId})-[r:FAVORITO]->(p:Product {id: $productId}) DELETE r")
+    void deleteFavoriteProduct(Long customerId, Long productId);
 }

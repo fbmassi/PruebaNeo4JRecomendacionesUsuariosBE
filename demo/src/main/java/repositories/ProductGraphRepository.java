@@ -7,39 +7,41 @@ import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.UUID;
 
 @Repository
-public interface ProductGraphRepository extends Neo4jRepository<ProductNode, UUID> {
+public interface ProductGraphRepository extends Neo4jRepository<ProductNode, Long> {
 
-    //CRUD
+    // Crear un nuevo producto
+    @Query("CREATE (p:Product {id: $id, name: $name, category: $category, year: $year, director: $director}) RETURN p")
+    ProductNode createProductNode(Long id, String name, String category, int year, String director);
 
-    @Query("CREATE (p:Product {code: $code, name: $name, description: $description, stock: $stock, price: $price, category: $category}) RETURN p")
-    ProductNode createProduct(String code, String name, String description, int stock, double price, String category);
-
-    @Query("MATCH (p:Product {code: $code}) " +
-            "SET p.name = $name, p.description = $description, p.stock = $stock, p.price = $price, p.category = $category " +
+    // Actualizar un producto
+    @Query("MATCH (p:Product {id: $id}) " +
+            "SET p.name = $name, p.category = $category, p.year = $year, p.director = $director " +
             "RETURN p")
-    ProductNode updateProduct(String code, String name, String description, int stock, double price, String category);
+    ProductNode updateProductNode(Long id, String name, String category, int year, String director);
 
-    @Query("MATCH (p:Product {code: $code}) DELETE p")
-    void deleteProduct(String code);
+    // Eliminar un producto
+    @Query("MATCH (p:Product {id: $id}) DELETE p")
+    void deleteProductNode(Long id);
 
-    //OBTENER INFO
-
+    // Buscar todos los productos
     @Query("MATCH (p:Product) RETURN p")
-    List<ProductNode> findAllProducts();
+    List<ProductNode> findAllProductNodes();
 
-    @Query("MATCH (p:Product {code: $code}) RETURN p")
-    ProductNode findProductByCode(String code);
+    // Buscar producto por id
+    @Query("MATCH (p:Product {id: $id}) RETURN p")
+    ProductNode findProductNodeById(Long id);
 
+    // Buscar producto por nombre
     @Query("MATCH (p:Product {name: $name}) RETURN p")
-    ProductNode findProductByName(String name);
+    ProductNode findProductNodeByName(String name);
 
+    // Buscar productos destacados
     @Query("MATCH (p:Product) WHERE p.highlighted = true RETURN p")
-    List<ProductNode> findHighlightedProducts();
+    List<ProductNode> findHighlightedProductNodes();
 
+    // Agrupación de productos por categoría
     @Query("MATCH (p:Product) RETURN DISTINCT p.category AS category, collect(p) AS products")
-    List<ProductNode> findProductsGroupedByCategory();
-
+    List<ProductNode> findProductNodesGroupedByCategory();
 }
