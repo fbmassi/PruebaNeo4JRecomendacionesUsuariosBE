@@ -153,27 +153,41 @@ public class ProductGraphServiceTest {
 
     @Test
     public void testFindProductByName() {
+        // Crear objetos de prueba
+        ProductNode productNode2 = new ProductNode();
+        productNode2.setId(3L);
+        productNode2.setName("Inception 2");
+        productNode2.setCategory("Action");
+        productNode2.setYear(2014);
+        productNode2.setDirector("Christopher Nolan");
 
-        // Configurar el comportamiento simulado del repositorio
-        when(productGraphRepository.createProductNode(anyLong(), anyString(), anyString(), anyInt(), anyString()))
-                .thenReturn(productNode);
+        List<ProductNode> productNodeList = Arrays.asList(productNode, productNode2);
 
-        // Invocar el método de servicio
-        ProductNode createdProduct = productService.createProduct(productNodeDTO);
+        // Crear los DTOs esperados
+        ProductNodeDTO productNodeDTO1 = new ProductNodeDTO(1L, "Inception", "Sci-Fi", 2010, "Christopher Nolan");
+        ProductNodeDTO productNodeDTO2 = new ProductNodeDTO(3L, "Inception 2", "Action", 2014, "Christopher Nolan");
 
-        // Configurar el comportamiento simulado del repositorio
-        when(productGraphRepository.findProductNodeByName("Inception")).thenReturn(productNode);
+        // Configurar el comportamiento simulado del repositorio para devolver una lista de nodos
+        when(productGraphRepository.findProductNodesByName("Incept")).thenReturn(productNodeList);
 
-        // Invocar el método de servicio
-        ProductNode foundProduct = productService.findProductByName("Inception");
+        // Invocar el método del servicio
+        List<ProductNodeDTO> foundProducts = productService.findProductByName("Incept");
 
         // Verificar que el método del repositorio fue invocado correctamente
-        verify(productGraphRepository, times(1)).findProductNodeByName("Inception");
+        verify(productGraphRepository, times(1)).findProductNodesByName("Incept");
 
         // Verificar los resultados
-        assertNotNull(foundProduct);
-        assertEquals(productNode.getId(), foundProduct.getId());
+        assertNotNull(foundProducts);
+        assertEquals(2, foundProducts.size());
+
+        // Verificar que los DTOs son correctos
+        assertEquals(productNodeDTO1.getId(), foundProducts.get(0).getId());
+        assertEquals(productNodeDTO1.getName(), foundProducts.get(0).getName());
+
+        assertEquals(productNodeDTO2.getId(), foundProducts.get(1).getId());
+        assertEquals(productNodeDTO2.getCategory(), foundProducts.get(1).getCategory());
     }
+
 
     @Test
     public void testFindHighlightedProducts() {

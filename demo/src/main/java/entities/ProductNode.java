@@ -1,5 +1,6 @@
 package entities;
 
+import dtos.ProductNodeDTO;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
@@ -68,6 +69,11 @@ public class ProductNode {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public static ProductNodeDTO toDto(ProductNode productNode) {
+        ProductNodeDTO dto = new ProductNodeDTO(productNode.getId(), productNode.getName(), productNode.getCategory(), productNode.getYear(), productNode.getDirector());
+        return dto;
     }
 
 }

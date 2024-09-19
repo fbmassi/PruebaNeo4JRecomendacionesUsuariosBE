@@ -7,6 +7,7 @@ import repositories.ProductGraphRepository;
 import entities.ProductNode;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductGraphService {
@@ -52,8 +53,11 @@ public class ProductGraphService {
     }
 
     // Buscar producto por nombre
-    public ProductNode findProductByName(String name) {
-        return productGraphRepository.findProductNodeByName(name);
+    public List<ProductNodeDTO> findProductByName(String name) {
+        List<ProductNode> productNodes = productGraphRepository.findProductNodesByName(name);
+        return productNodes.stream()
+                .map(ProductNode::toDto)
+                .collect(Collectors.toList());
     }
 
     // Buscar productos destacados

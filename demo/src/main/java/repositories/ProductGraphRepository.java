@@ -33,9 +33,9 @@ public interface ProductGraphRepository extends Neo4jRepository<ProductNode, Lon
     @Query("MATCH (p:Product {id: $id}) RETURN p")
     ProductNode findProductNodeById(Long id);
 
-    // Buscar producto por nombre
-    @Query("MATCH (p:Product {name: $name}) RETURN p")
-    ProductNode findProductNodeByName(String name);
+    // Buscar producto por nombre (coincidencia parcial)
+    @Query("MATCH (p:Product) WHERE p.name CONTAINS $name RETURN p")
+    List<ProductNode> findProductNodesByName(String name);
 
     // Buscar productos destacados
     @Query("MATCH (p:Product) WHERE p.highlighted = true RETURN p")
